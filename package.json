@@ -1,8 +1,8 @@
 {
-  "name": "template-node-typescript",
+  "name": "roman-numerals-calculator-service",
   "version": "1.0.0",
   "org": "my-org",
-  "description": "Code pattern for starting a typescript-based microservice",
+  "description": "Roman number calculator",
   "main": "index.js",
   "config": {
     "protocol": "http",
@@ -17,7 +17,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "test": "jest --coverage",
-    "tdd": "jest --watch",
+    "tdd": "jest --watch --verbose",
     "prebuild": "npm run clean",
     "build": "tsc",
     "postbuild": "npm run swagger",
