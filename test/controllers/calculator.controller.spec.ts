@@ -12,7 +12,7 @@ class MockCalculatorService implements CalculatorApi {
 describe('calculator.controller', () => {
 
   let app: Application;
-  let mockGreeting: jest.Mock;
+  let mockCalculator: jest.Mock;
 
   beforeEach(() => {
     const apiServer = buildApiServer();
@@ -22,22 +22,41 @@ describe('calculator.controller', () => {
     Container.bind(CalculatorApi).scope(Scope.Singleton).to(MockCalculatorService);
 
     const mockService: CalculatorApi = Container.get(CalculatorApi);
-    mockGreeting = mockService.calculate as jest.Mock;
+    mockCalculator = mockService.calculate as jest.Mock;
   });
 
   test('canary validates test infrastructure', () => {
     expect(true).toBe(true);
   });
 
-  describe('Given /add?operands=I,II', () => {
-    const expectedResponse = 'III';
+  describe('Given /add', () => {
+    describe('When checking for valid input', () => {
+      const input:string = 'I, IV, X';
+      const output:string = '15';
 
-    beforeEach(() => {
-      mockGreeting.mockReturnValueOnce(Promise.resolve(expectedResponse));
-    });
+      beforeEach(() => {
+        mockCalculator.mockImplementationOnce(() => Promise.resolve(
+          {
+            data: output,
+            status: 200
+          }
+          ));
+      });
+  
+      afterEach(() => {
+        jest.clearAllMocks();
+      })
 
-    test('should return "Hello, World!"', done => {
-      request(app).get('/add?operands=I,II').expect(200).expect(expectedResponse, done);
+      context(`add("${input}") should make a mock API call to calculate() with operator "add" and operands "${input}""`, () => {
+        test(`it should return ${output}`, () => {
+          request(app)
+          .get('/add')
+          .query({operands: input})
+          .expect(200)
+          .expect(output);
+        });
+      });
     });
+    
   });
 });

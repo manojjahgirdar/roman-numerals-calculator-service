@@ -1,5 +1,4 @@
 import {Container} from 'typescript-ioc';
-
 import {CalculatorService} from '../../src/services';
 import {ApiServer} from '../../src/server';
 import {buildApiServer} from '../helper';
@@ -19,11 +18,34 @@ describe('Hello World service', () =>{
   });
 
   describe('Given calculate()', () => {
-    context('when operator "add" and operands "I, II" is provided', () => {
+    context('Operator "add"', () => {
       const operation = 'add';
-      const operands = 'I, II';
-      test('then return "III"', async () => {
-        expect(await service.calculate(operation, operands)).toEqual(`III`);
+      context('for no operands i.e ""', () => {
+        const operands: string = '';
+        test('it should throw Bad Request Error', async () => {
+          await expect(service.calculate(operation, operands)).rejects.toThrow('No input provided');
+        });
+      });
+      context('for one operand i.e "I"', () => {
+        const operands: string = 'I';
+        const result = '1';
+        test('it should return "1"', async () => {
+          expect(await service.calculate(operation, operands)).toBe(result);
+        });
+      });
+      context('for two operands i.e "I, II"', () => {
+        const operands: string = 'I, II';
+        const result = '3';
+        test('it should return "3"', async () => {
+          expect(await service.calculate(operation, operands)).toEqual(result);
+        });
+      });
+      context('for more than 2 operands i.e. "I, II, III"', () => {
+        const operands: string = 'I, II, III';
+        const result = '6';
+        test('it should return "6"', async () => {
+          expect(await service.calculate(operation, operands)).toEqual(result);
+        });
       });
     });
   });
