@@ -29,10 +29,10 @@ export class CalculatorController {
     return this.service.calculate('sub', operands);
   }
 
-  // @Path('/mult')
-  // @GET
-  // async MultFunc(@QueryParam('operands') operands: string): Promise<string> {
-  //   this.logger.info(`MultFunc called with operands: ${operands}`);
-  //   return this.service.calculate('mult', operands);
-  // }
+  @Path('/mult')
+  @GET
+  async MultFunc(@QueryParam('operands') operands: string): Promise<string> {
+    this.logger.info(`MultFunc called with operands: ${operands}`);
+    return this.service.calculate('mult', operands);
+  }
 }

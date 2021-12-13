@@ -1,16 +1,28 @@
-import {Container} from 'typescript-ioc';
-import {CalculatorService} from '../../src/services';
-import {ApiServer} from '../../src/server';
-import {buildApiServer} from '../helper';
+import { Container, Scope } from 'typescript-ioc';
+import { CalculatorService, ConverterApi } from '../../src/services';
+import { ApiServer } from '../../src/server';
+import { BadRequestError } from 'typescript-rest/dist/server/model/errors';
 
-describe('Calculator service', () =>{
+class MockConverterService implements ConverterApi {
+  toNumber = jest.fn().mockName('toNumber');
+  toRoman = jest.fn().mockName('toRoman');
+}
 
-  let app: ApiServer;
+describe('Calculator service', () => {
   let service: CalculatorService;
-  beforeAll(() => {
-    app = buildApiServer();
+  let mockToRoman: jest.Mock;
+  let mockToNumber: jest.Mock;
 
+  beforeAll(() => {
     service = Container.get(CalculatorService);
+    Container.bind(ConverterApi).scope(Scope.Singleton).to(MockConverterService);
+    service.converterApi = Container.get(ConverterApi);
+    mockToRoman = service.converterApi.toRoman as jest.Mock;
+    mockToNumber = service.converterApi.toNumber as jest.Mock;
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   test('canary test verifies test infrastructure', () => {
@@ -19,8 +31,7 @@ describe('Calculator service', () =>{
 
   describe('Given calculate(operation, operands)', () => {
     context('Any operation', () => {
-      // const operator = ['add', 'subtract', 'multiply', 'divide'][Math.floor(Math.random() * 4)];
-      const operation = Math.random() > 0.5 ? 'add' : 'sub';
+      const operation = ['add', 'subtract', 'multiply', 'divide'][Math.floor(Math.random() * 4)];
       context('for no operands i.e ""', () => {
         const operands: string = '';
         test('it should throw Bad Request Error', async () => {
@@ -28,9 +39,13 @@ describe('Calculator service', () =>{
         });
       });
       context('for invalid roman numeral input like "II, XIIII", "III"', () => {
-        const operands: string = 'II, XIIII, III';
+        
         test('it should throw Bad Request Error', async () => {
-          await expect(service.calculate(operation, operands)).rejects.toThrow('Invalid Roman Numeral');
+          const operands = 'II, XIIII, III';
+          mockToNumber.mockImplementationOnce(() => {
+            throw new BadRequestError("Invalid input");
+          });
+          await expect(service.calculate(operation, operands)).rejects.toThrow('Invalid input');
         });
       });
     });
@@ -45,49 +60,182 @@ describe('Calculator service', () =>{
         });
       });
       context('for two operands i.e "I, II"', () => {
-        const operands: string = 'I, II';
-        const result = 'III';
+
         test('it should return "III"', async () => {
-          expect(await service.calculate(operation, operands)).toEqual(result);
+
+          // Calculator microservice calculate() input and expected output
+          const operands: string = 'I, II';
+          const expectedOutput = 'III';
+
+          // Converter mock microservice toNumber() input and expected output
+          const romanNumeral: string[] = operands.split(',');
+          const numberOutput: number[] = [1, 2];
+
+          //Setup
+          romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
+          mockToRoman.mockResolvedValue(expectedOutput);
+
+          //Work
+          const result = await service.calculate(operation, operands);
+
+          //Assertions / Expectations
+          expect(result).toBe(expectedOutput);
+          expect(mockToNumber).toHaveBeenCalledTimes(romanNumeral.length);
+          expect(mockToRoman).toHaveBeenCalledTimes(1);
         });
       });
       context('for more than 2 operands i.e. "I, II, III"', () => {
-        const operands: string = 'I, II, III';
-        const result = 'VI';
+
         test('it should return "VI"', async () => {
-          expect(await service.calculate(operation, operands)).toEqual(result);
+          // Calculator microservice calculate() input and expected output
+          const operands: string = 'I, II, III';
+          const expectedOutput = 'VI';
+
+          // Converter mock microservice toNumber() input and expected output
+          const romanNumeral: string[] = operands.split(',');
+          const numberOutput: number[] = [1, 2, 3];
+
+          //Setup
+          romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
+          mockToRoman.mockResolvedValue(expectedOutput);
+
+          //Work
+          const result = await service.calculate(operation, operands);
+
+          //Assertions / Expectations
+          expect(result).toBe(expectedOutput);
+          expect(mockToNumber).toHaveBeenCalledTimes(romanNumeral.length);
+          expect(mockToRoman).toHaveBeenCalledTimes(1);
         });
       });
     });
 
     context('"sub" Operation', () => {
       const operation = 'sub';
-      context('for one operand i.e "I"', () => {
-        const operands: string = 'I';
-        const result = 'I';
-        test('it should return "I"', async () => {
-          expect(await service.calculate(operation, operands)).toBe(result);
-        });
-      });
+      
       context('for two operands i.e "I, VI"', () => {
-        const operands: string = 'I, VI';
-        const result = 'V';
+
         test('it should return "V"', async () => {
-          expect(await service.calculate(operation, operands)).toBe(result);
+          // Calculator microservice calculate() input and expected output
+          const operands: string = 'I, VI';
+          const expectedOutput = 'V';
+
+          // Converter mock microservice toNumber() input and expected output
+          const romanNumeral: string[] = operands.split(',');
+          const numberOutput: number[] = [1, 6];
+
+          //Setup
+          romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
+          mockToRoman.mockResolvedValue(expectedOutput);
+
+          //Work
+          const result = await service.calculate(operation, operands);
+
+          //Assertions / Expectations
+          expect(result).toBe(expectedOutput);
+          expect(mockToNumber).toHaveBeenCalledTimes(romanNumeral.length);
+          expect(mockToRoman).toHaveBeenCalledTimes(1);
         });
       });
       context('for more than 2 operands i.e. "X, II, L"', () => {
-        const operands: string = 'X, II, L';
-        const result = 'XXXVIII';
+
         test('it should return "XXXVIII"', async () => {
-          expect(await service.calculate(operation, operands)).toBe(result);
+          // Calculator microservice calculate() input and expected output
+          const operands: string = 'X, II, L';
+          const expectedOutput = 'XXXVIII';
+
+          // Converter mock microservice toNumber() input and expected output
+          const romanNumeral: string[] = operands.split(',');
+          const numberOutput: number[] = [10, 2, 50];
+
+          //Setup
+          romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
+          mockToRoman.mockResolvedValue(expectedOutput);
+
+          //Work
+          const result = await service.calculate(operation, operands);
+
+          //Assertions / Expectations
+          expect(result).toBe(expectedOutput);
+          expect(mockToNumber).toHaveBeenCalledTimes(romanNumeral.length);
+          expect(mockToRoman).toHaveBeenCalledTimes(1);
         });
       });
       context('for operands resulting in zero i.e. "X, X"', () => {
-        const operands: string = 'X, X';
-        const result = 'nulla';
+
         test('it should return "nulla"', async () => {
-          expect(await service.calculate(operation, operands)).toBe(result);
+          // Calculator microservice calculate() input and expected output
+          const operands: string = 'X, X';
+          const expectedOutput = 'nulla';
+
+          // Converter mock microservice toNumber() input and expected output
+          const romanNumeral: string[] = operands.split(',');
+          const numberOutput: number[] = [10, 10];
+
+          //Setup
+          romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
+          mockToRoman.mockResolvedValue(expectedOutput);
+
+          //Work
+          const result = await service.calculate(operation, operands);
+
+          //Assertions / Expectations
+          expect(result).toBe(expectedOutput);
+          expect(mockToNumber).toHaveBeenCalledTimes(romanNumeral.length);
+          expect(mockToRoman).toHaveBeenCalledTimes(1);
+        });
+      });
+    });
+
+    context('"mult" Operation', () => {
+      const operation = 'mult';
+
+      context('for two operands i.e "IV, VI"', () => {
+
+        test('it should return "XXIV"', async () => {
+          // Calculator microservice calculate() input and expected output
+          const operands: string = 'IV, VI';
+          const expectedOutput = 'XXIV';
+
+          // Converter mock microservice toNumber() input and expected output
+          const romanNumeral: string[] = operands.split(',');
+          const numberOutput: number[] = [4, 6];
+
+          //Setup
+          romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
+          mockToRoman.mockResolvedValue(expectedOutput);
+
+          //Work
+          const result = await service.calculate(operation, operands);
+
+          //Assertions / Expectations
+          expect(result).toBe(expectedOutput);
+          expect(mockToNumber).toHaveBeenCalledTimes(romanNumeral.length);
+          expect(mockToRoman).toHaveBeenCalledTimes(1);
+        });
+      });
+      context('for more than 2 operands i.e. "VII, III, V"', () => {
+
+        test('it should return "CV"', async () => {
+          // Calculator microservice calculate() input and expected output
+          const operands: string = 'VII, III, V';
+          const expectedOutput = 'CV';
+
+          // Converter mock microservice toNumber() input and expected output
+          const romanNumeral: string[] = operands.split(',');
+          const numberOutput: number[] = [7, 3, 5];
+
+          //Setup
+          romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
+          mockToRoman.mockResolvedValue(expectedOutput);
+
+          //Work
+          const result = await service.calculate(operation, operands);
+
+          //Assertions / Expectations
+          expect(result).toBe(expectedOutput);
+          expect(mockToNumber).toHaveBeenCalledTimes(romanNumeral.length);
+          expect(mockToRoman).toHaveBeenCalledTimes(1);
         });
       });
     });

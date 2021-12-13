@@ -21,22 +21,25 @@ export class CalculatorService implements CalculatorApi {
   async calculate(operation: string = "add", operands: string = "I,II"): Promise<string> {
     this.logger.info(`calculate function invoked with operation: ${operation} and operands: ${operands}`);
 
-    if (operands.trim() === "") throw new BadRequestError("No input provided");
+    const { Operands, _length } = this.validate(operands);
 
-    // Check the length of the operands
-    let Operands = operands.split(",");
+    if (_length === 1) return Operands[0].trim().toString();
 
-    // If there is only one operand then return the operand as it is
-    if (Operands.length === 1) return Operands[0].trim().toString();
+    const numbers: number[] = await Promise.all( // [1, 2]
+      Operands.map(
+        async operand => await this.converterApi.toNumber(operand.trim())
+      )
+    );
 
-    // Convert operands list from Roman to Numbers
-    const numbers: number[] = await Promise.all(Operands.map(async operand => await this.converterApi.toNumber(operand.trim())));;
+    const resultNumber: number = this.whichOperation(operation, numbers); // (add, [1, 2])
 
-    // Pass the Numbers list to Add/Sub/Mult/Div function  
-    let resultNumber: number = this.whichOperation(operation, numbers);
-
-    // Convert result number to Roman
     return await this.converterApi.toRoman(resultNumber);
+  }
+
+  private validate(operands: string): { Operands: string[], _length: number } {
+    if (!operands && operands.trim() === "") throw new BadRequestError("No input provided");
+    const Operands = operands.split(",");
+    return { Operands, _length: Operands.length };
   }
 
   private whichOperation(operation: string, numbers: number[]): number {
@@ -47,22 +50,31 @@ export class CalculatorService implements CalculatorApi {
         break;
       case "sub":
         resultNumber = this.sub(numbers);
-
-      default:
         break;
+      case "mult":
+        resultNumber = this.mult(numbers);
+        break;
+      default:
+        throw new BadRequestError("Method not implemented");
     }
     return resultNumber;
   }
+  private mult(operands: number[]): number {
+    let result: number = 1;
+    operands.forEach(operand => result *= operand);
+    return result;
+  }
+
+  private add(operands: number[]): number { // [1, 2] => 0 + 1 = 1  1 + 2 = retuern 3
+    let result: number = 0;
+    operands.forEach(operand => result += operand);
+    return result;
+  }
+
   private sub(numbers: number[]): number {
     numbers = numbers.sort((a, b) => b - a);
     let result: number = numbers[0];
     for (let i = 1; i < numbers.length; i++) result -= numbers[i];
-    return result;
-  }
-
-  private add(operands: number[]): number {
-    let result: number = 0;
-    operands.forEach(operand => result += operand);
     return result;
   }
 }

@@ -3,8 +3,6 @@ import { ConverterService } from '../../src/services';
 import axios from 'axios';
 import { BadRequestError } from 'typescript-rest/dist/server/model/errors';
 
-const baseURL: string = "https://roman-numerals-converter-service-dev-manoj.eco-training-f2c6cdc6801be85fd188b09d006f13e3-0000.us-east.containers.appdomain.cloud";
-
 jest.mock('axios');
 let mockAxios = axios as jest.Mocked<typeof axios>;
 
@@ -40,7 +38,6 @@ describe('Converter API Mock Testing', () => {
         // Assertions / Expectations
         expect(result).toEqual(output);
         expect(mockAxios.get).toHaveBeenCalledTimes(1);
-        expect(mockAxios.get).toHaveBeenCalledWith(`${baseURL}/to-roman`, { params: { value: input } });
       });
     });
     context('toRoman() should make only 1 API call and thow Bad Request Error when called with invalid input', () => {
@@ -57,7 +54,6 @@ describe('Converter API Mock Testing', () => {
 
         // Assertions / Expectations
         expect(mockAxios.get).toHaveBeenCalledTimes(1);
-        expect(mockAxios.get).toHaveBeenCalledWith(`${baseURL}/to-roman`, { params: { value: input } });
       });
     });
   });
@@ -78,7 +74,6 @@ describe('Converter API Mock Testing', () => {
         // Assertions / Expectations
         expect(result).toEqual(output);
         expect(mockAxios.get).toHaveBeenCalledTimes(1);
-        expect(mockAxios.get).toHaveBeenCalledWith(`${baseURL}/to-number`, { params: { value: input } });
       });
     });
     context('toNumber() should make only 1 API call and thow Bad Request Error when called with invalid input', () => {
@@ -95,7 +90,6 @@ describe('Converter API Mock Testing', () => {
 
         // Assertions / Expectations
         expect(mockAxios.get).toHaveBeenCalledTimes(1);
-        expect(mockAxios.get).toHaveBeenCalledWith(`${baseURL}/to-number`, { params: { value: input } });
       });
     });
   });

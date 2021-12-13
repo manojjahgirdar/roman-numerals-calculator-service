@@ -65,24 +65,25 @@ describe('calculator.controller', () => {
         mockCalculator.mockImplementationOnce(() => {
           throw new BadRequestError("Invalid input provided");
         });
-    });
-
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-
-    context(`add("${input}") should make a mock API call to calculate() with operation "add" and operands "${input}""`, () => {
-      test(`it should return BadRequestError`, () => {
-        request(app)
-          .get('/add')
-          .query({ operands: input })
-          .expect(400);
       });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
+      context(`add("${input}") should make a mock API call to calculate() with operation "add" and operands "${input}""`, () => {
+        test(`it should return BadRequestError`, () => {
+          request(app)
+            .get('/add')
+            .query({ operands: input })
+            .expect(400);
+        });
+      });
+
+
     });
-
-
   });
-});
+
   describe('Given /sub', () => {
     describe('When checking for valid input', () => {
       const input: string = 'I, IV, X';
@@ -119,13 +120,66 @@ describe('calculator.controller', () => {
         mockCalculator.mockImplementationOnce(() => {
           throw new BadRequestError("Invalid input provided");
         });
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
+      context(`sub("${input}") should make a mock API call to calculate() with operation "sub" and operands "${input}""`, () => {
+        test(`it should return BadRequestError`, () => {
+          request(app)
+            .get('/sub')
+            .query({ operands: input })
+            .expect(400);
+        });
+      });
+    });
+  });
+
+  describe('Given /mult', () => {
+    describe('When checking for valid input', () => {
+      const input: string = 'II, IV, X';
+      const output: string = 'LXX';
+
+      beforeEach(() => {
+        mockCalculator.mockImplementationOnce(() => Promise.resolve(
+          {
+            data: output,
+            status: 200
+          }
+        ));
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+      })
+
+      context(`mult("${input}") should make a mock API call to calculate() with operation "mult" and operands "${input}""`, () => {
+        test(`it should return ${output}`, () => {
+          request(app)
+            .get('/sub')
+            .query({ operands: input })
+            .expect(200)
+            .expect(output);
+        });
+      });
+    });
+
+    describe('When checking for invalid input', () => {
+      const input: string = 'LXIM, IV, X';
+
+      beforeEach(() => {
+        mockCalculator.mockImplementationOnce(() => {
+          throw new BadRequestError("Invalid input provided");
+        });
     });
 
     afterEach(() => {
       jest.clearAllMocks();
     });
 
-    context(`sub("${input}") should make a mock API call to calculate() with operation "sub" and operands "${input}""`, () => {
+    context(`mult("${input}") should make a mock API call to calculate() with operation "mult" and operands "${input}""`, () => {
       test(`it should return BadRequestError`, () => {
         request(app)
           .get('/sub')
@@ -134,6 +188,5 @@ describe('calculator.controller', () => {
       });
     });
     });
-
   });
 });
