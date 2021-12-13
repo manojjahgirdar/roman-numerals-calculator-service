@@ -22,12 +22,12 @@ export class CalculatorController {
     return this.service.calculate('add', operands);
   }
 
-  // @Path('/sub')
-  // @GET
-  // async SubFunc(@QueryParam('operands') operands: string): Promise<string> {
-  //   this.logger.info(`SubFunc called with operands: ${operands}`);
-  //   return this.service.calculate('sub', operands);
-  // }
+  @Path('/sub')
+  @GET
+  async SubFunc(@QueryParam('operands') operands: string): Promise<string> {
+    this.logger.info(`SubFunc called with operands: ${operands}`);
+    return this.service.calculate('sub', operands);
+  }
 
   // @Path('/mult')
   // @GET
