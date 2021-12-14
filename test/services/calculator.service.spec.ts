@@ -138,7 +138,7 @@ describe('Calculator service', () => {
         });
       });
 
-      context('for two operands whoes difference is negative i.e. "X, XI"', () => {
+      context('for two operands difference in negative i.e. "X, XI"', () => {
 
         test('it should throw Not Implemented Error', async () => {
           const operands = 'X, XI';
