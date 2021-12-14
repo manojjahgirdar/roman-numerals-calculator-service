@@ -1,7 +1,7 @@
 import { Container, Scope } from 'typescript-ioc';
 import { CalculatorService, ConverterApi } from '../../src/services';
 import { ApiServer } from '../../src/server';
-import { BadRequestError } from 'typescript-rest/dist/server/model/errors';
+import { BadRequestError, NotImplementedError } from 'typescript-rest/dist/server/model/errors';
 
 class MockConverterService implements ConverterApi {
   toNumber = jest.fn().mockName('toNumber');
@@ -113,16 +113,16 @@ describe('Calculator service', () => {
     context('"sub" Operation', () => {
       const operation = 'sub';
       
-      context('for two operands i.e "I, VI"', () => {
+      context('for two operands i.e "VI, II"', () => {
 
-        test('it should return "V"', async () => {
+        test('it should return "IV"', async () => {
           // Calculator microservice calculate() input and expected output
-          const operands: string = 'I, VI';
-          const expectedOutput = 'V';
+          const operands: string = 'VI, II';
+          const expectedOutput = 'IV';
 
           // Converter mock microservice toNumber() input and expected output
           const romanNumeral: string[] = operands.split(',');
-          const numberOutput: number[] = [1, 6];
+          const numberOutput: number[] = [6, 2];
 
           //Setup
           romanNumeral.forEach(roman => mockToNumber.mockResolvedValue(numberOutput));
@@ -137,6 +137,18 @@ describe('Calculator service', () => {
           expect(mockToRoman).toHaveBeenCalledTimes(1);
         });
       });
+
+      context('for two operands whoes difference is negative i.e. "X, XI"', () => {
+
+        test('it should throw Not Implemented Error', async () => {
+          const operands = 'X, XI';
+          mockToNumber.mockImplementationOnce(() => {
+            throw new NotImplementedError("Result number out of range");
+          });
+          await expect(service.calculate(operation, operands)).rejects.toThrow('Result number out of range');
+        });
+      });
+
       context('for more than 2 operands i.e. "X, II, L"', () => {
 
         test('it should return "XXXVIII"', async () => {
