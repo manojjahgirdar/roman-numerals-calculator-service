@@ -35,4 +35,11 @@ export class CalculatorController {
     this.logger.info(`MultFunc called with operands: ${operands}`);
     return this.service.calculate('mult', operands);
   }
+
+  @Path('/div')
+  @GET
+  async DivFunc(@QueryParam('operands') operands: string): Promise<string> {
+    this.logger.info(`DivFunc called with operands: ${operands}`);
+    return this.service.calculate('div', operands);
+  }
 }
