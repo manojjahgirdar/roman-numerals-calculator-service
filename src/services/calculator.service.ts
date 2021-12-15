@@ -45,4 +45,8 @@ export class CalculatorService implements CalculatorApi {
 
     return await this.converterApi.toRoman(resultNumber);
   }
+
+  private div(a:number, b:number): number {
+    return 0  
+  }
 }
