@@ -35,7 +35,7 @@ export class CalculatorService implements CalculatorApi {
 
     const { Operands, _length } = this.validate(operands);
 
-    if (_length === 1) return Operands[0].trim().toString();
+    if (_length === 1) return Operands[0].trim();
 
     const numbers: number[] = await Promise.all(Operands.map(async operand => await this.converterApi.toNumber(operand.trim())));
 
@@ -45,6 +45,4 @@ export class CalculatorService implements CalculatorApi {
 
     return await this.converterApi.toRoman(resultNumber);
   }
-
-  
 }

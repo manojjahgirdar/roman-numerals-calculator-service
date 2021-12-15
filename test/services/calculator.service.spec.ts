@@ -1,6 +1,5 @@
 import { Container, Scope } from 'typescript-ioc';
 import { CalculatorService, ConverterApi } from '../../src/services';
-import { ApiServer } from '../../src/server';
 import { BadRequestError, NotImplementedError } from 'typescript-rest/dist/server/model/errors';
 
 class MockConverterService implements ConverterApi {
@@ -31,24 +30,31 @@ describe('Calculator service', () => {
 
   describe('Given calculate(operation, operands)', () => {
     context('Any operation', () => {
+      
       const operation = ['add', 'subtract', 'multiply', 'divide'][Math.floor(Math.random() * 4)];
+      
       context('for no operands i.e ""', () => {
         const operands: string = '';
+        
         test('it should throw Bad Request Error', async () => {
           await expect(service.calculate(operation, operands)).rejects.toThrow('No input provided');
         });
       });
+
       context('for invalid roman numeral input like "II, XIIII", "III"', () => {
         
         test('it should throw Bad Request Error', async () => {
           const operands = 'II, XIIII, III';
+          
           mockToNumber.mockImplementationOnce(() => {
             throw new BadRequestError("Invalid input");
           });
+
           await expect(service.calculate(operation, operands)).rejects.toThrow('Invalid input');
         });
       });
     });
+
     context('"add" Operation', () => {
       const operation = 'add';
 
@@ -59,15 +65,16 @@ describe('Calculator service', () => {
           expect(await service.calculate(operation, operands)).toBe(result);
         });
       });
+
       context('for two operands i.e "I, II"', () => {
 
         test('it should return "III"', async () => {
 
-          // Calculator microservice calculate() input and expected output
+          // Calculator microservice to call calculate() with input and expected output
           const operands: string = 'I, II';
           const expectedOutput = 'III';
 
-          // Converter mock microservice toNumber() input and expected output
+          // Converter mock microservice to call toNumber() input and expected output
           const romanNumeral: string[] = operands.split(',');
           const numberOutput: number[] = [1, 2];
 
@@ -84,6 +91,7 @@ describe('Calculator service', () => {
           expect(mockToRoman).toHaveBeenCalledTimes(1);
         });
       });
+
       context('for more than 2 operands i.e. "I, II, III"', () => {
 
         test('it should return "VI"', async () => {
